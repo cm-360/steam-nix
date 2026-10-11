@@ -7,9 +7,11 @@
 let
   cfg = config.steamNix;
 
-  inherit (import ../../lib/mk-artwork-files.nix { inherit lib; }) mkArtworkFiles;
-  mkAddNonSteam = import ../../lib/mk-add-non-steam.nix { inherit lib pkgs; };
-  mkShortId = import ../../lib/mk-short-id.nix;
+  inherit (import ../../lib { inherit lib pkgs; })
+    mkAddNonSteam
+    mkArtworkFiles
+    mkShortId
+    ;
 in
 {
   options.steamNix = {
