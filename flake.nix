@@ -27,5 +27,10 @@
         default = steam-nix;
         steam-nix = ./modules/home-manager;
       };
+
+      nixosModules = rec {
+        default = steam-nix;
+        steam-nix = ./modules/nixos;
+      };
     };
 }
