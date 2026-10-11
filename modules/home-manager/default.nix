@@ -7,9 +7,9 @@
 let
   cfg = config.steamNix;
 
-  inherit (import ./lib/mk-artwork-files.nix { inherit lib; }) mkArtworkFiles;
-  mkAddNonSteam = import ./lib/mk-add-non-steam.nix { inherit lib pkgs; };
-  mkShortId = import ./lib/mk-short-id.nix;
+  inherit (import ../../lib/mk-artwork-files.nix { inherit lib; }) mkArtworkFiles;
+  mkAddNonSteam = import ../../lib/mk-add-non-steam.nix { inherit lib pkgs; };
+  mkShortId = import ../../lib/mk-short-id.nix;
 in
 {
   options.steamNix = {
@@ -183,7 +183,7 @@ in
             inherit (game.nonSteamShortcut) appName exePath;
             shortId = mkShortId appName exePath;
           in
-          lib.optional game.id != shortId ''
+          lib.optional (game.id != shortId) ''
             Non-Steam shortcut app ID mismatch for ${appName}: expected ${shortId}, got ${game.id}
           ''
         ) nonSteamGames

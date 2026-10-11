@@ -1,31 +1,21 @@
 {
   description = "Manage a Steam library/metadata with Nix via Home Manager.";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   outputs =
     { self, nixpkgs }:
     let
-      supportedSystems = [ "x86_64-linux" ];
+      systems = nixpkgs.lib.systems.flakeExposed;
 
-      forAllSystems =
-        function:
-        nixpkgs.lib.genAttrs supportedSystems (
-          system:
-          function (
-            import nixpkgs {
-              inherit system;
-              overlays = [ self.overlays.default ];
-            }
-          )
-        );
+      forAllSystems = nixpkgs.lib.genAttrs systems;
     in
     {
       lib = ./lib;
 
       homeModules = rec {
         default = steam-nix;
-        steam-nix = ./module.nix;
+        steam-nix = ./modules/home-manager;
       };
     };
 }
