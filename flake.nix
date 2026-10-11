@@ -13,6 +13,16 @@
     {
       lib = ./lib;
 
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          themes = import ./pkgs/themes { inherit pkgs; };
+        }
+      );
+
       homeModules = rec {
         default = steam-nix;
         steam-nix = ./modules/home-manager;
