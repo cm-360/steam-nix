@@ -6,22 +6,9 @@
 }:
 let
   cfg = config.steamNix.decky.themes;
+  jovianCfg = config.jovian.decky-loader;
 
-  themesDir = pkgs.runCommand "decky-loader-themes" { } ''
-    mkdir -p "$out"
-
-    ${lib.concatMapStringsSep "\n" (theme: ''
-      mkdir -p "$out/${theme.name}"
-
-      for item in ${lib.escapeShellArg theme.package}/*; do
-        ln -s "$item" "$out/${theme.name}/$(basename "$item")"
-      done
-
-      cat > "$out/${theme.name}/config_USER.json" <<'EOF'
-      ${builtins.toJSON (theme.config // { active = theme.enable; })}
-      EOF
-    '') cfg}
-  '';
+  jsonFormat = pkgs.formats.json { };
 in
 {
   options.steamNix.decky.themes = lib.mkOption {
@@ -48,7 +35,7 @@ in
           };
 
           config = lib.mkOption {
-            type = lib.types.attrs;
+            type = jsonFormat.type;
             default = { };
             description = "Configuration written to the theme's {file}`config_USER.json`.";
           };
@@ -64,10 +51,46 @@ in
   };
 
   config = lib.mkIf (cfg != [ ]) {
-    fileSystems."${config.jovian.decky-loader.stateDir}/themes" = {
-      device = "${themesDir}";
-      fsType = "none";
-      options = [ "bind" ];
-    };
+    system.activationScripts.installDeckyLoaderThemes =
+      let
+        user = jovianCfg.user;
+        group = config.users.users.${user}.group;
+      in
+      ''
+        set -eu
+
+        themes_dir="${jovianCfg.stateDir}/themes"
+        themes_tmp="$(mktemp -d "${jovianCfg.stateDir}/.themes.XXXXXX")"
+
+        trap 'rm -rf "$themes_tmp"' EXIT
+
+        ${lib.concatMapStringsSep "\n" (
+          theme:
+          let
+            themeConfig = theme.config // ({ active = theme.enable; });
+            configFile = jsonFormat.generate "decky-${theme.name}-theme-config.json" themeConfig;
+          in
+          ''
+            theme_dir="$themes_tmp/${theme.name}"
+            mkdir -p "$theme_dir"
+
+            cp -as "${theme.package}"/. "$theme_dir/"
+            ln -s "${configFile}" "$theme_dir/config_USER.json"
+          ''
+        ) cfg}
+
+        if [ -e "$themes_dir" ]; then
+          old_dir="$(mktemp -d "${jovianCfg.stateDir}/.themes-old.XXXXXX")"
+          rmdir "$old_dir"
+          mv "$themes_dir" "$old_dir"
+          mv "$themes_tmp" "$themes_dir"
+          rm -rf "$old_dir"
+        else
+          mv "$themes_tmp" "$themes_dir"
+        fi
+
+        chown -R "${user}:${group}" "$themes_dir"
+        chmod 0755 "$themes_dir"
+      '';
   };
 }
