@@ -1,5 +1,5 @@
 {
-  description = "Manage a Steam library/metadata with Nix via Home Manager.";
+  description = "Manage a Steam library/metadata and Decky Loader extras with Nix.";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
