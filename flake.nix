@@ -20,6 +20,8 @@
         in
         {
           themes = import ./pkgs/themes { inherit pkgs; };
+
+          shortcuts-vdf-tool = pkgs.callPackage ./pkgs/shortcuts-vdf-tool { };
         }
       );
 
