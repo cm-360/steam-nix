@@ -27,7 +27,7 @@ in
         lib.types.submodule {
           options = {
             id = lib.mkOption {
-              type = lib.types.str;
+              type = lib.types.ints.unsigned;
               description = "App ID.";
             };
 
@@ -186,7 +186,7 @@ in
             shortId = mkShortId appName exePath;
           in
           lib.optional (game.id != shortId) ''
-            Non-Steam shortcut app ID mismatch for ${appName}: expected ${shortId}, got ${game.id}
+            Non-Steam shortcut app ID mismatch for ${appName}: expected ${builtins.toString shortId}, got ${builtins.toString game.id}
           ''
         ) nonSteamGames
       );

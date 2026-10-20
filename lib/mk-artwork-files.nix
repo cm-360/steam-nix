@@ -15,9 +15,9 @@ let
       src,
     }:
     lib.optionalAttrs (src != null) {
-      "steam-grid-${userId}-${appId}${suffix}" = {
+      "steam-grid-${userId}-${builtins.toString appId}${suffix}" = {
         source = src;
-        target = "Steam/userdata/${userId}/config/grid/${appId}${suffix}${getExtension src}";
+        target = "Steam/userdata/${userId}/config/grid/${builtins.toString appId}${suffix}${getExtension src}";
       };
     };
 

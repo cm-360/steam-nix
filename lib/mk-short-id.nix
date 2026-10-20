@@ -53,6 +53,6 @@ let
         else
           appId;
     in
-    builtins.toString shortId;
+    shortId;
 in
 mkShortId
