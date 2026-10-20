@@ -17,6 +17,16 @@ def fix_unsigned(obj):
     return obj
 
 
+def fix_signed(obj):
+    if isinstance(obj, dict):
+        return {k: fix_signed(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [fix_signed(v) for v in obj]
+    if isinstance(obj, int) and 0x80000000 <= obj <= 0xFFFFFFFF:
+        return obj - 0x100000000
+    return obj
+
+
 def read_shortcuts(path):
     with path.open("rb") as f:
         data = vdf.binary_load(f)
@@ -29,6 +39,7 @@ def read_shortcuts(path):
 
 
 def write_shortcuts(path, shortcuts):
+    shortcuts = fix_signed(shortcuts)
     data = {"shortcuts": {str(i): s for i, s in enumerate(shortcuts, start=1)}}
 
     with path.open("wb") as f:
