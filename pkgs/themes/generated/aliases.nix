@@ -1,6 +1,6 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 let
-  packages = import ./packages.nix { inherit pkgs; };
+  packages = import ../packages.nix { inherit lib pkgs; };
 in
 {
   "2013-inspired-steam-ui" = packages."bf570414-7d7c-4955-a5d1-e19f40fa7142";

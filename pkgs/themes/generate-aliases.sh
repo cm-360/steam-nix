@@ -25,9 +25,9 @@ normalize_name() {
 }
 
 {
-	printf '{ pkgs, ... }:\n'
+	printf '{ lib, pkgs, ... }:\n'
 	printf 'let\n'
-	printf '  packages = import ./packages.nix { inherit pkgs; };\n'
+	printf '  packages = import ../packages.nix { inherit lib pkgs; };\n'
 	printf 'in\n'
 	printf '{\n'
 

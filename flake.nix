@@ -17,9 +17,10 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
+          inherit (pkgs) lib;
         in
         {
-          themes = import ./pkgs/themes { inherit pkgs; };
+          themes = import ./pkgs/themes { inherit lib pkgs; };
 
           shortcuts-vdf-tool = pkgs.callPackage ./pkgs/shortcuts-vdf-tool { };
         }
