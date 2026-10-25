@@ -15,25 +15,31 @@ if [ -n "$ignore_aliases_txt" ]; then
 	ignore_aliases=$(<"$ignore_aliases_txt")
 fi
 
-{
-	cat <<'EOF'
-{ pkgs, ... }:
-let
-  packages = import ./packages.nix { inherit pkgs; };
-in
-{
-EOF
+normalize_name() {
+	printf '%s' "$1" |
+		tr '[:upper:]' '[:lower:]' |
+		sed -e 's/[^a-z0-9]/-/g' \
+			-e 's/-\{2,\}/-/g' \
+			-e 's/^-//' \
+			-e 's/-$//'
+}
 
-	jq -r '.[]|[.id, .displayName] | @tsv' <"$themes_json" |
+{
+	printf '{ pkgs, ... }:\n'
+	printf 'let\n'
+	printf '  packages = import ./packages.nix { inherit pkgs; };\n'
+	printf 'in\n'
+	printf '{\n'
+
+	jq -r '.[] | [.id, .displayName] | @tsv' "$themes_json" |
 		while IFS=$'\t' read -r id name; do
 			if [ -n "$ignore_aliases" ] && grep -Fxq "$id" <<<"$ignore_aliases"; then
 				printf '%s: ignore\n' "$id" >&2
 				continue
 			fi
 
-			norm_name=$(printf '%s' "$name" |
-				tr '[:upper:]' '[:lower:]' |
-				sed 's/[^a-z0-9]/-/g; s/-\{2,\}/-/g; s/^-//; s/-$//')
+			norm_name=$(normalize_name "$name")
+
 			printf '  "%s" = packages."%s";\n' "$norm_name" "$id"
 		done | sort
 
