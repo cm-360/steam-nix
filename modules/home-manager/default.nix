@@ -8,10 +8,13 @@ let
   cfg = config.steamNix;
 
   inherit (import ../../lib { inherit lib pkgs; })
-    mkAddNonSteam
     mkArtworkFiles
     mkShortId
     ;
+
+  shortcuts-vdf-tool = pkgs.callPackage ../../pkgs/shortcuts-vdf-tool { };
+
+  jsonFormat = pkgs.formats.json { };
 in
 {
   options.steamNix = {
@@ -36,68 +39,70 @@ in
                 lib.types.submodule {
                   options = {
                     appName = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                      description = "Name to display in Steam (--appname).";
+                      type = lib.types.str;
+                      default = "";
+                      description = "Name of the game within Steam.";
                     };
 
                     exePath = lib.mkOption {
                       type = lib.types.str;
-                      description = "Executable path (--exepath).";
+                      description = "Absolute path to the game's executable.";
                     };
 
                     startDir = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                      description = "Working directory (--startdir).";
+                      type = lib.types.str;
+                      default = "";
+                      description = "Directory to launch the game from.";
                     };
 
                     iconPath = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                      description = "Icon path (--iconpath).";
+                      type = lib.types.str;
+                      default = "";
+                      description = "Absolute path to the game's icon.";
                     };
 
+                    # TODO: allow str array
                     launchOptions = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                      description = "Launch options (--launchoptions).";
+                      type = lib.types.str;
+                      default = "";
+                      description = "Command line options to add after the executable when launching the game.";
                     };
 
-                    hide = lib.mkOption {
-                      type = lib.types.nullOr lib.types.bool;
-                      default = null;
-                      description = "Hide game in Steam (--hide).";
+                    isHidden = lib.mkOption {
+                      type = lib.types.bool;
+                      default = false;
+                      description = "Whether the game is hidden within Steam.";
                     };
 
-                    allowDesktopConf = lib.mkOption {
-                      type = lib.types.nullOr lib.types.bool;
-                      default = null;
-                      description = "Allow desktop controller config (--allowdesktopconf).";
+                    allowDesktopConfig = lib.mkOption {
+                      type = lib.types.bool;
+                      default = true;
+                      description = "Whether to use desktop controller configuration in launcher.";
                     };
 
                     allowOverlay = lib.mkOption {
-                      type = lib.types.nullOr lib.types.bool;
-                      default = null;
-                      description = "Enable Steam overlay (--allowoverlay).";
+                      type = lib.types.bool;
+                      default = true;
+                      description = "Whether to enable the Steam Overlay while in-game.";
                     };
 
                     openVR = lib.mkOption {
-                      type = lib.types.nullOr lib.types.bool;
-                      default = null;
-                      description = "Include in VR library (--openvr).";
+                      type = lib.types.bool;
+                      default = false;
+                      description = "Whether to include in VR Library.";
                     };
 
+                    sortAs = lib.mkOption {
+                      type = lib.types.str;
+                      default = "";
+                      description = "Text to use for sorting the game within your library.";
+                    };
+
+                    # TODO
                     tags = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                      description = "Tags (--tags).";
-                    };
-
-                    compatibilityTool = lib.mkOption {
-                      type = lib.types.nullOr lib.types.str;
-                      default = null;
-                      description = "Compatibility tool (--compatibilitytool).";
+                      type = lib.types.attrs;
+                      default = { };
+                      description = "Tags.";
                     };
                   };
                 }
@@ -167,7 +172,7 @@ in
       );
 
       default = { };
-      description = "Declare non-Steam games to add using SteamTinkerLaunch.";
+      description = "Declare non-Steam games to add.";
     };
   };
 
@@ -176,6 +181,32 @@ in
       games = builtins.attrValues cfg.games;
 
       nonSteamGames = builtins.filter (game: game.nonSteamShortcut != null) games;
+
+      shortcutsPath = "${config.xdg.dataHome}/Steam/userdata/${cfg.userId}/config/shortcuts.vdf";
+
+      shortcutsJson = jsonFormat.generate "shortcuts.json" (
+        map (
+          game:
+          let
+            shortcut = game.nonSteamShortcut;
+          in
+          # https://developer.valvesoftware.com/wiki/Add_Non-Steam_Game#Parameters
+          {
+            appid = game.id;
+            appname = shortcut.appName;
+            exe = shortcut.exePath;
+            StartDir = shortcut.startDir;
+            icon = shortcut.iconPath;
+            LaunchOptions = shortcut.launchOptions;
+            IsHidden = shortcut.isHidden;
+            AllowDesktopConfig = shortcut.allowDesktopConfig;
+            AllowOverlay = shortcut.allowOverlay;
+            openvr = shortcut.openVR;
+            sortas = shortcut.sortAs;
+            tags = shortcut.tags;
+          }
+        ) nonSteamGames
+      );
     in
     {
       warnings = lib.concatLists (
@@ -191,11 +222,14 @@ in
         ) nonSteamGames
       );
 
-      home.activation = {
-        addNonSteamGames = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-          ${"${mkAddNonSteam nonSteamGames}/bin/add-non-steam-games"}
-        '';
-      };
+      home.activation.addNonSteamGames = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        run "${lib.getExe shortcuts-vdf-tool}" merge \
+          "${shortcutsPath}" \
+          "${shortcutsPath}.tmp" \
+          "${shortcutsJson}"
+
+        run mv -- "${shortcutsPath}.tmp" "${shortcutsPath}"
+      '';
 
       xdg.dataFile = lib.mkMerge (map (game: mkArtworkFiles cfg.userId game.id game.artwork) games);
     }
