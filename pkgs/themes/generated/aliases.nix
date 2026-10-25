@@ -14,6 +14,7 @@ in
   "animated-synthwave-backgrounds" = packages."adf10dfa-e09b-4985-a429-0ef78b28cc05";
   "art-hero-footer-gap-fix" = packages."77908446-0f4c-4b9d-84c3-85a1226fea41";
   "art-hero" = packages."994360e7-cfca-46d3-9337-80d28ad169ba";
+  "art-hero-recommended" = packages."8a5dbbb3-ab11-4ad4-8f8b-b4be242189ac";
   "art-hero-tv" = packages."72679b9a-cadc-4966-9f3e-3d93e375c9e1";
   "astolfo-keyboard" = packages."da56f953-3a2c-4e22-a104-b383d24f6fd0";
   "asuka-evangelion-theme" = packages."9dbaa2e8-46ea-4d27-bc1d-14abf7d052e2";
