@@ -12,11 +12,11 @@ let
 in
 {
   options.steamNix.decky.themes = lib.mkOption {
-    type = lib.types.listOf (
+    type = lib.types.attrsOf (
       lib.types.submodule {
         options = {
           name = lib.mkOption {
-            type = lib.types.str;
+            type = lib.types.nullOr lib.types.str;
             description = "The name of the theme.";
           };
 
@@ -64,14 +64,15 @@ in
 
         trap 'rm -rf "$themes_tmp"' EXIT
 
-        ${lib.concatMapStringsSep "\n" (
-          theme:
+        ${lib.concatMapAttrsStringSep "\n" (
+          name: theme:
           let
+            themeName = if theme.name == null then name else theme.name;
             themeConfig = theme.config // ({ active = theme.enable; });
-            configFile = jsonFormat.generate "decky-${theme.name}-theme-config.json" themeConfig;
+            configFile = jsonFormat.generate "decky-${themeName}-theme-config.json" themeConfig;
           in
           ''
-            theme_dir="$themes_tmp/${theme.name}"
+            theme_dir="$themes_tmp/${themeName}"
             mkdir -p "$theme_dir"
 
             cp -as "${theme.package}"/. "$theme_dir/"
