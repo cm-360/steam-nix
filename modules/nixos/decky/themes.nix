@@ -15,11 +15,6 @@ in
     type = lib.types.attrsOf (
       lib.types.submodule {
         options = {
-          name = lib.mkOption {
-            type = lib.types.nullOr lib.types.str;
-            description = "The name of the theme.";
-          };
-
           enable = lib.mkOption {
             type = lib.types.bool;
             default = true;
@@ -67,15 +62,15 @@ in
         ${lib.concatMapAttrsStringSep "\n" (
           name: theme:
           let
-            themeName = if theme.name == null then name else theme.name;
             themeConfig = theme.config // ({ active = theme.enable; });
-            configFile = jsonFormat.generate "decky-${themeName}-theme-config.json" themeConfig;
+            configFile = jsonFormat.generate "decky-${name}-theme-config.json" themeConfig;
           in
           ''
-            theme_dir="$themes_tmp/${themeName}"
+            theme_src="$(find "${theme.package}" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+            theme_dir="$themes_tmp/$(basename "$theme_src")"
             mkdir -p "$theme_dir"
 
-            cp -as "${theme.package}"/. "$theme_dir/"
+            cp -as "$theme_src"/. "$theme_dir/"
             ln -s "${configFile}" "$theme_dir/config_USER.json"
           ''
         ) cfg}
