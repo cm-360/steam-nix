@@ -1,8 +1,7 @@
-{ lib, pkgs, ... }:
+{ lib, pkgs }:
 let
-  aliases = import ./aliases.nix { inherit lib pkgs; };
-  packages = import ./packages.nix { inherit lib pkgs; };
+  inherit (import ../builders { inherit pkgs; }) buildDeckThemesTheme;
 
-  themes = aliases // packages;
+  generated = import ./generated/packages.nix { inherit lib pkgs buildDeckThemesTheme; };
 in
-themes
+generated
