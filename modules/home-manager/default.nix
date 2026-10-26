@@ -7,7 +7,7 @@
 let
   cfg = config.steamNix;
 
-  inherit (import ../../lib { inherit lib pkgs; })
+  inherit (import ../../lib { inherit lib; })
     mkArtworkFiles
     mkShortId
     ;
