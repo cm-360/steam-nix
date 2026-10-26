@@ -18,12 +18,15 @@
         let
           pkgs = import nixpkgs { inherit system; };
           inherit (pkgs) lib;
+
+          builders = import ./pkgs/builders { inherit pkgs; };
         in
         {
           themes = import ./pkgs/themes { inherit lib pkgs; };
 
           shortcuts-vdf-tool = pkgs.callPackage ./pkgs/shortcuts-vdf-tool { };
         }
+        // builders
       );
 
       homeModules = rec {
