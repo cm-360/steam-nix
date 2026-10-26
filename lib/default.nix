@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib }:
 {
   inherit (import ./mk-artwork-files.nix { inherit lib; })
     mkArtworkFiles
