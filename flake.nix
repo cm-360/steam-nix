@@ -22,6 +22,7 @@
           builders = import ./pkgs/builders { inherit pkgs; };
         in
         {
+          plugins = import ./pkgs/plugins { inherit lib pkgs; };
           themes = import ./pkgs/themes { inherit lib pkgs; };
 
           shortcuts-vdf-tool = pkgs.callPackage ./pkgs/shortcuts-vdf-tool { };
