@@ -45,7 +45,7 @@ in
     '';
   };
 
-  config = lib.mkIf (cfg != [ ]) {
+  config = lib.mkIf (cfg != { }) {
     system.activationScripts.installDeckyLoaderThemes =
       let
         user = jovianCfg.user;
